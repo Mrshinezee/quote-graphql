@@ -11,6 +11,15 @@ const typeDefs = gql`
   type Query {
     quotes: [Quote]
   }
+  type Mutation {
+    addQuote(phrase: String!, quotee: String): Quote
+    editQuote(id: ID!, phrase: String, quotee: String): Quote
+    deleteQuote(id: ID!): DeleteResponse
+  }
+
+  type DeleteResponse {
+    ok: Boolean!
+  }
 `;
 
 const quotes = {};
@@ -27,6 +36,29 @@ addQuote({ phrase: "Woah!", quotee: "Neo" });
 const resolvers = {
   Query: {
     quotes: () => Object.values(quotes),
+  },
+  Mutation: {
+    addQuote: async (parent, quote) => {
+      return addQuote(quote);
+    },
+    editQuote: async (parent, { id, ...quote }) => {
+      if (!quotes[id]) {
+        throw new Error("Quote doesn't exist");
+      }
+
+      quotes[id] = {
+        ...quotes[id],
+        ...quote,
+      };
+
+      return quotes[id];
+    },
+    deleteQuote: async (parent, { id }) => {
+      const ok = Boolean(quotes[id]);
+      delete quotes[id];
+
+      return { ok };
+    },
   },
 };
 
